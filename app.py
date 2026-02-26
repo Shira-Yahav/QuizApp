@@ -6,9 +6,10 @@ app = Flask(__name__)
 
 client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
-QUIZ_SCHEMA = {
-    "name": "quiz",
-    "schema": {
+QUIZ_TOOL = {
+    "name": "generate_quiz",
+    "description": "Generate a structured multiple-choice quiz",
+    "input_schema": {
         "type": "object",
         "properties": {
             "title": {"type": "string", "description": "A short title for the quiz"},
@@ -34,12 +35,10 @@ QUIZ_SCHEMA = {
                         },
                     },
                     "required": ["id", "question", "options", "correct_index", "explanation"],
-                    "additionalProperties": False,
                 },
             },
         },
         "required": ["title", "questions"],
-        "additionalProperties": False,
     },
 }
 
@@ -73,13 +72,10 @@ def generate_quiz():
             max_tokens=4096,
             system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content": prompt}],
-            output_config={
-                "json_schema": QUIZ_SCHEMA,
-            },
+            tools=[QUIZ_TOOL],
+            tool_choice={"type": "tool", "name": "generate_quiz"},
         )
-        import json
-
-        quiz_data = json.loads(response.content[0].text)
+        quiz_data = response.content[0].input
         return jsonify(quiz_data)
     except anthropic.APIError as e:
         return jsonify({"error": f"API error: {str(e)}"}), 502
