@@ -8,7 +8,6 @@ client = anthropic.Anthropic(api_key=os.environ.get("ANTHROPIC_API_KEY"))
 
 QUIZ_SCHEMA = {
     "name": "quiz",
-    "strict": True,
     "schema": {
         "type": "object",
         "properties": {
